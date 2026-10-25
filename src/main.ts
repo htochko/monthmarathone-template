@@ -10,10 +10,16 @@ import { I18nManager } from './utils/i18n';
 import { SupportedLanguage } from './types/challenge';
 
 (function () {
-  const params = new URLSearchParams(globalThis.location.search);
+  const params = new URLSearchParams(window.location.search);
   const redirectPath = params.get('p');
+  
   if (redirectPath) {
-    globalThis.history.replaceState(null, '', redirectPath);
+    const basePath = import.meta.env.BASE_URL;
+    const fullPath = basePath === '/' 
+      ? redirectPath 
+      : basePath.replace(/\/$/, '') + redirectPath;
+      
+    globalThis.history.replaceState(null, '', fullPath);
   }
 })();
 
