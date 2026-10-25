@@ -14,9 +14,9 @@ export class MarathonRouter {
     const basePath = MarathonRouter.getBasepathClean();
     let pathname = globalThis.location.pathname;
 
-    // Strip base path prefix if hosted in a subfolder (e.g., /monthmarathone-template/)
+    // Безопасное удаление префикса репозитория без ошибок со сдвигом индексов
     if (basePath !== '/' && pathname.startsWith(basePath)) {
-      pathname = pathname.slice(basePath.length - 1);
+      pathname = '/' + pathname.slice(basePath.length);
     }
 
     const segments = pathname.replace(/\/$/, '').split('/').filter(Boolean);
