@@ -1,45 +1,59 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
-import fs from 'fs';
 import { ALL_DAYS } from './src/data';
 
-// Plugin to generate static JSON endpoints during build
+/**
+ * Plugin to generate static JSON endpoints and physical HTML pages for GitHub Pages
+ */
 const staticApiPlugin = () => ({
   name: 'static-api-generator',
   writeBundle() {
-    const apiDir = resolve(__dirname, 'dist/api');
-    if (!fs.existsSync(apiDir)) {
-      fs.mkdirSync(apiDir, { recursive: true });
+    const distDirectory = path.resolve(__dirname, 'dist');
+    const apiDirectory = path.join(distDirectory, 'api');
+
+    if (!fs.existsSync(apiDirectory)) {
+      fs.mkdirSync(apiDirectory, { recursive: true });
     }
 
-    // Export all days
+    // 1. Generate static JSON endpoints
     fs.writeFileSync(
-      resolve(apiDir, 'challenges.json'),
-      JSON.stringify({ success: true, data: ALL_DAYS }, null, 2)
+      path.join(apiDirectory, 'challenges.json'),
+      JSON.stringify({ success: true, data: ALL_DAYS }, undefined, 2)
     );
 
-    // Export 2026 specifically
-    const days2026 = ALL_DAYS.filter(d => d.year === 2026);
+    const days2026 = ALL_DAYS.filter((day) => day.year === 2026);
     fs.writeFileSync(
-      resolve(apiDir, '2026.json'),
-      JSON.stringify({ success: true, data: days2026 }, null, 2)
+      path.join(apiDirectory, '2026.json'),
+      JSON.stringify({ success: true, data: days2026 }, undefined, 2)
     );
-  }
+
+    // 2. Generate physical index.html files for all routes to prevent 404 errors on GitHub Pages
+    const indexPath = path.join(distDirectory, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      const indexHtmlContent = fs.readFileSync(indexPath, 'utf8');
+
+      const uniqueYears = Array.from(new Set(ALL_DAYS.map((day) => day.year)));
+      const staticRoutes = [
+        ...uniqueYears.map((year) => `${year}`),
+        ...ALL_DAYS.map((day) => `${day.year}/${day.slug}`),
+      ];
+
+      for (const route of staticRoutes) {
+        const routeDirectory = path.join(distDirectory, route);
+        if (!fs.existsSync(routeDirectory)) {
+          fs.mkdirSync(routeDirectory, { recursive: true });
+        }
+        fs.writeFileSync(path.join(routeDirectory, 'index.html'), indexHtmlContent);
+      }
+    }
+  },
 });
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  // Base path for deployment (can be overridden when used as template)
-  // base: './'
   base: '/monthmarathone-template/',
   plugins: [staticApiPlugin()],
   build: {
     outDir: 'dist',
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-        '404': resolve(__dirname, '404.html'),
-      },
-    },
   },
 });
