@@ -9,6 +9,14 @@ import { renderDayDetailView } from './views/DayDetailView';
 import { I18nManager } from './utils/i18n';
 import { SupportedLanguage } from './types/challenge';
 
+(function () {
+  const params = new URLSearchParams(globalThis.location.search);
+  const redirectPath = params.get('p');
+  if (redirectPath) {
+    globalThis.history.replaceState(null, '', redirectPath);
+  }
+})();
+
 const appElement = document.getElementById('app');
 
 function renderApp(): void {
