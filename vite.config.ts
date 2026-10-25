@@ -30,7 +30,7 @@ const staticApiPlugin = () => ({
 // https://vitejs.dev/config/
 export default defineConfig({
   // Base path for deployment (can be overridden when used as template)
-  base: '/',
+  base: './',
   plugins: [staticApiPlugin()],
   build: {
     outDir: 'dist',
